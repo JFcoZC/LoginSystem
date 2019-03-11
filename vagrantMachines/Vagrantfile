@@ -1,0 +1,172 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+#Definir variable config
+Vagrant.configure("2") do |config|
+    #--- INICIO MAQUINA DEL WEB SERVER ---
+      #Configurar para iniciar ssh de servidor usando: vagrant ssh web 
+    #  config.vm.define "web" do |web|
+    #    web.vm.box = "ubuntu/bionic64"
+        #Permitir que todo trafico mandado al puerto del host (computadora) sea mandado al puerto
+        #del guest(maquina virtual). El Daemon se pone en el puerto de la computadora para redireccionar
+        #el trafico
+    #    web.vm.network "forwarded_port", guest: 80, host: 80
+    #    web.vm.network "private_network", ip: "192.168.0.10"
+    #    web.vm.provision "shell", inline: <<-SHELL
+    #      echo "webserver" > /etc/hostname
+          #Confiugrar hostname del servidor
+    #      hostname -b webserver
+          #Haciendo que webserver pueda enconctrar al loginserver por nombre
+    #      echo "192.168.0.20        loginserver" >> /etc/hosts
+          #Haciendo que webserver pueda enconctrar al dbserver por nombre
+    #      echo "192.168.0.30        dbserver" >> /etc/hosts
+          #Instalar apache
+    #      apt-get update
+    #      apt-get install -y apache2
+          #Crear carpetas requeridas
+    #      sudo mkdir -p /var/www/example.com/html
+          #Asignar el usuario propietario del directorio
+    #      sudo chown -R $USER:$USER /var/www/example.com/html
+          #Asegurarse de que el directorio raiz para la web tiene los permisos necesarios(puede omitirse)
+    #      sudo chmod -R 755 /var/www/example.com
+          #Moverse a directorio
+    #      cd /var/www/html
+          #Bajar documentos github (Clone)
+          #sudo apt-get install git
+          #git clone https://github.com/JFcoZC/Cloud-basedClock.git
+          #wget https://github.com/JFcoZC/Cloud-basedClock.git/blob/master/jquery-3.3.1.js
+          #Eliminar archivos de mas
+          #cd Cloud-basedClock/Relojv3
+          #rm -rf servidor
+    #    SHELL
+    #  end
+      #--- INICIO MAQUINA DE LA BDS ---
+      #Configurar para iniciar ssh de servidor usando: vagrant ssh web 
+      config.vm.define "db" do |db|
+        db.vm.box = "ubuntu/bionic64"
+        #Permitir que todo trafico mandado al puerto del host (computadora) sea mandado al puerto
+        #del guest(maquina virtual). El Daemon se pone en el puerto de la computadora para redireccionar
+        #el trafico
+        db.vm.network "forwarded_port", guest: 5432, host: 5432
+        db.vm.network "private_network", ip: "192.168.0.30"
+        db.vm.provision "shell", inline: <<-SHELL
+          echo "dbserver" > /etc/hostname
+          #Confiugrar hostname del servidor
+          hostname -b dbserver
+          #Haciendo que dbserver pueda enconctrar al sessionserver por nombre
+          echo "192.168.0.40        sessionserver" >> /etc/hosts
+          #Haciendo que dbserver pueda enconctrar al webserver por nombre
+          echo "192.168.0.10        webserver" >> /etc/hosts
+          #Instalar postgres (server packageExtensionOfCommunity)
+          sudo apt-get install postgresql postgresql-contrib -y
+          #Crete USER postgres with PASSWORD postgres
+          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';" 
+          #Mover archivos con la configuracion correcta para que puedan hacerse conexiones
+          #desde clientes externos
+          sudo cp /vagrant/pg_hba.conf /etc/postgresql/10/main/
+          sudo cp /vagrant/postgresql.conf /etc/postgresql/10/main/
+          #Reinicar servicio de postgres
+          sudo /etc/init.d/postgresql restart
+          #Verificar que postgres este corriendo en el puerto adecuado
+          pg_lsclusters
+          #Acceder a la cuenta postgres
+          #sudo -i -u postgres
+          #Open psql comand line in full admin mode
+          #sudo -u postgres psql
+          #Create database
+          #create database mydb; 
+
+          ##Instalar Repositorio necesario para insalar node
+          #sudo apt install curl
+          ##Descagar repositorio
+          #curl -sL https://deb.nodesource.com/setup_8.x | sudo bash -
+          ##Install nodejs and npm del repositorio descargado
+          #sudo apt install nodejs -y
+          ##Crear directorio guardar documentos servidor
+          #mkdir servidor
+          ##Moverse a carpeta
+          #cd servidor
+          ##Generar el paquete de json requerido por express
+          #npm init -y
+          ##Install express and save flag to update dependencies inside package.json
+          #npm install express@4.16.0 --save
+          
+          ##Instalar cors library requerida por node
+          #npm install cors
+
+          #-----------------------------------------------------------
+          ##Acceder a la cuenta postgres
+          #sudo -u postgres
+          ##Crear contraseña 'pass' para usuario 'postgres'
+          #sudo -u postgres psql postgres
+          #\password postgres
+          ##Confirmar dos veces la contraseña
+          #pass
+          #pass
+          #Salir psql coman line
+          #\q
+          ##Ejecutar comandos de archivo .sql
+          #cd servidor
+          ##Open psql comand line in full admin mode
+          
+          #sudo -u postgres psql -c "" <- comando que dentro de comillas ejecuta lo que
+          ##sea como si se agregara desde la terminal de comandos de pql por el usuario postgres
+
+          
+          ##Crear BDS y vaciar tablas del arhivo .sql que se genero
+          #psql: invocar psql comand line 
+          ##https://superuser.com/questions/701415/how-do-i-execute-run-a-sql-file-in-postgresql-9-2-6-centos
+          #sudo psql -h localhost -p 5432 -U postgres -d myDb -af database.sql
+        SHELL
+      end
+      #--- INICIO MAQUINA DEL SERVICIO DE SESSIONES ---  
+      #Definir variable web
+      config.vm.define "session" do |session|
+      session.vm.box = "ubuntu/bionic64"
+            # Create a forwarded port mapping which allows access to a specific port
+            # within the machine from a port on the host machine.
+            #Permitir que todo trafico mandado al puerto del host (computadora) sea mandado al puerto
+            #del guest(maquina virtual). El Daemon se pone en el puerto de la computadora para redireccionar
+            #el trafico hacia la maquina virtual
+            session.vm.network "forwarded_port", guest: 6379, host: 6379
+          
+            session.vm.network "private_network", ip: "192.168.0.40"
+            session.vm.provision "shell", inline: <<-SHELL
+                echo "sessionserver" > /etc/hostname
+                #Confiugrar hostname del servidor
+                hostname -b sessionserver
+                #Haciendo que sessionserver pueda enconctrar al dbserver por nombre
+                echo "192.168.0.30        dbserver" >> /etc/hosts
+                #Requerdio para installar redis
+                sudo apt-get update -y
+                sudo apt-get install build-essential -y
+                sudo apt-get install tcl -y
+                #4)Install make:
+                sudo apt install make
+                #5)Compiladro de c
+                sudo apt-get install gcc -y
+                #Install Reddis:
+                #1)Get file
+                curl -O http://download.redis.io/redis-stable.tar.gz
+                #2)Extract file
+                tar xzvf redis-stable.tar.gz
+                #3)Move to directory
+                cd redis-stable
+                #4)Compile
+                make
+                #Run redis
+                src/redis-server
+                #Start redis server
+                /etc/init.d/redis-server start
+                
+            SHELL
+      end
+    end
+
+    #https://stackoverflow.com/questions/43725970/sed-script-with-backslashes-works-in-console-or-standalone-script-but-not-a-vagr
+    #https://stackoverflow.com/questions/32437006/using-sed-to-append-lines-to-file-during-vagrant-provisioning
+    #CONSULTAS EN MAYUSCULAS
+    #https://www.postgresql.org/docs/8.4/tutorial-select.html
+    #INSTALAR REDIS
+    #https://hackernoon.com/using-redis-with-node-js-8d87a48c5dd7
+    #https://stackoverflow.com/questions/8131008/issue-with-redis-install/8138427

@@ -18,6 +18,8 @@ var portNumberSQLServer = 5432;
 var databaseSQLServer = 'postgres';
 var userSQLServer = 'postgres';
 var pswdSQLServer = 'postgres';
+//SESSION ID That if null means that there is NO Session in this device
+var sessionId;
 
 /*createDatabaseFile();
 uploadDatabaseFile();
@@ -188,3 +190,18 @@ function endSession(uid, sessionKey)
 
 }//End endSession function
 //-----------------------------
+
+//Session example:
+//https://www.codementor.io/mayowa.a/how-to-build-a-simple-session-based-authentication-system-with-nodejs-from-scratch-6vn67mcy3
+
+//Hash passwords with bcrypt:
+//https://medium.com/@mridu.sh92/a-quick-guide-for-authentication-using-bcrypt-on-express-nodejs-1d8791bb418f
+//https://www.npmjs.com/package/bcrypt-nodejs
+
+//Proceso para verificar sessiones:
+/*1)Verificar que ID de usuario exista en tabla USERS:
+*
+* 
+*
+*
+*/
