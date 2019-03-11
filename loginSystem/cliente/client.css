@@ -1,0 +1,39 @@
+/**
+*Jose Francisco Zeron Cabrera
+*154678
+*
+*Stylesheet file.
+*
+*File that contents stykes that are used by the client when it loads the html file.
+*/
+body
+{
+ 
+}
+/*All headers h1*/
+h1 
+{
+	/*position: relative;
+	text-align: center;*/
+	color:black;
+	background-color: cyan;
+
+}
+#welcome 
+{
+	position: relative;
+	text-align: center;
+
+}
+/*All elements with class form*/
+#container
+{
+	display: inline-table;
+	position: relative;
+}
+
+button
+{
+	display: block;
+	margin: 10px auto;
+}
