@@ -20,6 +20,10 @@ En misma carpeta donde esta instalado node y express
 **Instalar body-parser para leer POSTs
 En misma carpeta donde esta instalado node y express(loginSystem/Servidor)
 1)npm install body-parser --save
+
+**Instalar node-reddis
+En misma carpeta donde esta instalado node y express(loginSystem/Servidor)
+1)npm install redis
 ---
 Guia github:
 http://rogerdudler.github.io/git-guide/index.es.html

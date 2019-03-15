@@ -154,10 +154,10 @@ Vagrant.configure("2") do |config|
                 cd redis-stable
                 #4)Compile
                 make
-                #Run redis
-                src/redis-server
-                #Start redis server
-                /etc/init.d/redis-server start
+                #Run redis only for lopback clients
+                #src/redis-server
+                #Run redis only for any other subnet
+                src/redis-server --protected-mode no
                 
             SHELL
       end

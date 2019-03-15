@@ -14,3 +14,13 @@ dbServer.setDataDBUsersAndPermissions('192.168.0.30',5432,'postgres','postgres',
 dbServer.createDatabaseFile();
 /*Execute SQL File in specified DB*/
 dbServer.uploadDatabaseFile();
+
+/*Specify the values of the DB in which the sessions will be stored
+*
+*@param: IP
+*@param: socket
+*/
+dbServer.setDataSessioSnDB('192.168.0.40', 6379);
+
+dbServer.createSession('u1');
+dbServer.findSession(1);

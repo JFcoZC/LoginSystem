@@ -11,6 +11,10 @@
 var fs = require('fs');
 //Modlue to connect with postgresql
 const {Client,Pool} = require('pg');
+//Moudle to connect with Redis
+var redis = require('Redis');
+//Module to generate Unique Universal Identifiers
+const uuidv1 = require('uuid/v1');
 
 //GLOBAL VARIABLES FOR SQL SERVER
 var ipSQLServer = '192.168.0.30';
@@ -18,12 +22,13 @@ var portNumberSQLServer = 5432;
 var databaseSQLServer = 'postgres';
 var userSQLServer = 'postgres';
 var pswdSQLServer = 'postgres';
+
+//GLOBAL VARIABLES FOR REDIS SERVER
+var ipRedisServer = '192.168.0.40';
+var portNumberRedisServer = 6379;
 //SESSION ID That if null means that there is NO Session in this device
 var sessionId;
 
-/*createDatabaseFile();
-uploadDatabaseFile();
-insertRol();*/
 
 exports.createDatabaseFile = function()
 {
@@ -165,7 +170,7 @@ function verifyPermission(uid, permisson, type)
 //------------------------------
 /*
 *Funcion que inicie una session con base de datos que administra sesiones
-/*Regesa: La sessionkey que se genera automaticamente
+*Regesa: La sessionkey que se genera automaticamente
 */
 function intializeSession(uid)
 {
@@ -174,7 +179,7 @@ function intializeSession(uid)
 //-----------------------------
 /*
 *Verifies if a session and userId pair exists in the table.
-/*Returns: If a session with that key and uid was found or not in the table
+*Returns: If a session with that key and uid was found or not in the table
 */
 function verifySession(uid, sessionKey)
 {
@@ -183,14 +188,86 @@ function verifySession(uid, sessionKey)
 //-----------------------------
 /*
 *End a session, if found, in the table with session and userId paris.
-/*Returns: Sucess or failure(if not found) the session that we wanted to end
+*Returns: Sucess or failure(if not found) the session that we wanted to end
 */
 function endSession(uid, sessionKey)
 {
 
 }//End endSession function
 //-----------------------------
+/*
+*Set the values (ip and port number) where the server with the Redis DB
+*that handles the pairs of UserId,SessionNumber.
+*/
+exports.setDataSessioSnDB = function(ip, port)
+{
+	ipRedisServer = ip;
+	portNumberRedisServer = port;
 
+}//End setDataSessioSnDB function
+//-----------------------------
+/*
+*Insert a UID in table with the key generated using a uuid
+*
+*/
+exports.createSession = function(uid)
+{
+	//Initialize redis client
+	var client = redis.createClient(portNumberRedisServer, 	ipRedisServer);
+
+	//Probe connection
+	client.on('connect', function() {
+		console.log('Redis client connnected succesfully!');
+	} );
+
+	//Print errors if any
+	client.on('error', function(err) {
+		console.log("ERROR AT: "+err);
+	});//Fin funcion
+
+	//Create session key
+	var key =  1;//uuidv1();
+	var seconds = 60;
+	//Set session that expires after determined number of seconds
+	client.setex(key,seconds,uid, function(err,result){
+		console.log(result);
+	});
+
+}//End createSessio  function
+//-----------------------------
+/*
+*Look for existing uid given it is key
+*
+*/
+exports.findSession = function(key)
+{
+	//Initialize redis client
+	var client = redis.createClient(portNumberRedisServer, 	ipRedisServer);
+
+	//Probe connection
+	client.on('connect', function() {
+		console.log('Redis client connnected succesfully!');
+	} );
+
+	//Print errors if any
+	client.on('error', function(err) {
+		console.log("ERROR AT: "+err);
+	});//Fin funcion
+
+	client.get(key, function(err,result){
+
+		if(err)
+		{
+			console.log(err);
+			throw err;
+
+		}//Fin if	
+
+		console.log('RESULT: ' + result);
+	});//Fin get
+
+}//End createSessio  function
+//-----------------------------
 //Session example:
 //https://www.codementor.io/mayowa.a/how-to-build-a-simple-session-based-authentication-system-with-nodejs-from-scratch-6vn67mcy3
 
