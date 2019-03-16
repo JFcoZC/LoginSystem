@@ -32,6 +32,15 @@ Hacer push a branch master:
 1) git add <filename> o . (todos los archivos y carpetas)
 2) git commit -m "<mensaje>"
 3) git push origin master
+
+Crear branch y hacer push a branch
+https://github.com/Kunena/Kunena-Forum/wiki/Create-a-new-branch-with-git-and-manage-branches
+1) git checkout -b <branchName> <-Create branch in local machine
+2) git push origin <branchName>	<-Make public the branch on github
+3) git add <filename> o . (todos los archivos y carpetas)
+4) git commit -m "<mensaje>"
+5) git push origin <branch> 	<-Subir archivos a branch deseada
+
 ------
 NECESARIO PAR CORRER psql:
 1)Dar una contraseña a usario postgres(default): sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"

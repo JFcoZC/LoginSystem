@@ -36,13 +36,19 @@ exports.createDatabaseFile = function()
 	sqlData = 'drop table PERMISSION;\n'+
 			  'drop table USERS;\n'+
 			  'drop table ROL;\n'+
-			  'create table ROL( rolId SERIAL PRIMARY KEY);\n' +
+			  'create table ROL( rolId SERIAL PRIMARY KEY, name varchar(50) );\n' +
 			  'create table USERS( userId SERIAL PRIMARY KEY, ' +
 			  'password varchar(20),\n'+
+			  'username varchar(20),\n'+
 			  'rolId INTEGER REFERENCES ROL(rolId) );\n'+
 			  'create table PERMISSION( id SERIAL, pStr varchar(1000),'+
 			  'type varchar(20), rolId INTEGER REFERENCES ROL(rolId),'+
 			  'PRIMARY KEY (id,rolId)  );\n';
+
+	//TEST DATA
+	sqlData = sqlData + "INSERT INTO ROL (rolId, name) VALUES (DEFAULT,'Admin');\n"+
+						"INSERT INTO USERS (userId,password,username,rolId) VALUES (DEFAULT,'root','root',1);\n"+
+						"INSERT INTO USERS (userId,password,username,rolId) VALUES (DEFAULT,'paco','pass',1);";		  
 
 	//Create a file with the content, and if already exists it overwrites it
 	fs.writeFileSync('database.sql', sqlData);
@@ -55,17 +61,11 @@ exports.createDatabaseFile = function()
 */
 exports.uploadDatabaseFile = function()
 {
-	const pg = new Client({
-		user : userSQLServer,
-		host : ipSQLServer,
-		database : databaseSQLServer,
-		password: pswdSQLServer,
-		port : portNumberSQLServer,
-	})
-
 	//Convertir .sql a cadena
 	var sqlFile = fs.readFileSync('database.sql').toString();
 	
+	//Generate client for connection
+	const pg = generateClientDBUsrPer();
 
 	pg.connect(function(err,client){
 		if(err)
@@ -74,7 +74,7 @@ exports.uploadDatabaseFile = function()
 		}//Fin if
 		else
 		{
-			console.log('connected!!');
+			console.log('Connected to execute .sql File!!');
 
 			//Ejecutar archivo .sql como query
 			client.query(sqlFile, function(err,result){
@@ -100,17 +100,12 @@ exports.uploadDatabaseFile = function()
 }//End function uploadDatabaseFile
 //---------------------------------
 /*
+*Function that given a name for the rol generates a Rol in the ROL table.
 *
 */
-exports.insertRol = function()
+exports.insertRol = function(name)
 {
-	const pg = new Client({
-		user : userSQLServer,
-		host : ipSQLServer,
-		database : databaseSQLServer,
-		password: pswdSQLServer,
-		port : portNumberSQLServer,
-	})
+	const pg = generateClientDBUsrPer();
 
 	pg.connect(function(err,client){
 		if(err)
@@ -119,20 +114,59 @@ exports.insertRol = function()
 		}//Fin if
 		else
 		{
-			console.log('connected!!');
+			console.log('Connected to insert a new ROL');
 
 			//Ejecutar archivo .sql como query
-			client.query('INSERT INTO ROL (rolId) VALUES (DEFAULT);', function(err,result){
-				//done();
+			client.query("INSERT INTO ROL (rolId, name) VALUES (DEFAULT,'"+name+"');", function(err,result){
 				if(err)
 				{
-					console.log("error al insertar Rol", err);
+					console.log("Error inserting new Rol", err);
 					//Finalizar con errror
 					process.exit(1);
 
 				}//FIn if
 
 				console.log('Nuevo Rol creado!');
+				console.log(result);	
+
+				//Finalizar exitosamente la conexion hasta de spues de haber ejecutado .sql
+				process.exit(0);
+
+			});//End client.query	
+
+		}//End else	
+	});//End conexion
+
+}//End function insertRol
+//---------------------------------
+/*
+*
+*Function that generates a new User in table USER given an id, password and a existing rolID
+*/
+exports.insertUser = function(userName,pass,rolid)
+{
+	const pg = generateClientDBUsrPer();
+
+	pg.connect(function(err,client){
+		if(err)
+		{
+			console.log(err);
+		}//Fin if
+		else
+		{
+			console.log('Connected to insert a new USER');
+
+			//Ejecutar archivo .sql como query
+			client.query("INSERT INTO USERS (userId,password,username,rolId) VALUES (DEFAULT,'"+pass+"','"+userName+"','"+rolid+"'');", function(err,result){
+				if(err)
+				{
+					console.log("Error inserting new User", err);
+					//Finalizar con errror
+					process.exit(1);
+
+				}//FIn if
+
+				console.log('New user succesfully created!');
 				console.log(result);	
 
 				//Finalizar exitosamente la conexion hasta de spues de haber ejecutado .sql
@@ -158,6 +192,21 @@ exports.setDataDBUsersAndPermissions = function(ip,socket,database,user,pass)
 	pswdSQLServer = pass;
 
 }//End setDataDBUsersAndPermissions function
+//--------------------------------
+/*
+*Function that generates a new client given the actual values for connection to DB
+*that stores tables USERS, PERMISSION and ROL
+*/
+function generateClientDBUsrPer()
+{
+	return new Client({
+		user : userSQLServer,
+		host : ipSQLServer,
+		database : databaseSQLServer,
+		password: pswdSQLServer,
+		port : portNumberSQLServer,
+	});
+}
 //--------------------------------
 /*
 *Funcion que dado el id del usuario se verifique si tiene los permisos para hacer una accion
@@ -199,7 +248,7 @@ function endSession(uid, sessionKey)
 *Set the values (ip and port number) where the server with the Redis DB
 *that handles the pairs of UserId,SessionNumber.
 */
-exports.setDataSessioSnDB = function(ip, port)
+exports.setDataSessionsDB = function(ip, port)
 {
 	ipRedisServer = ip;
 	portNumberRedisServer = port;
@@ -236,13 +285,14 @@ exports.createSession = function(uid)
 }//End createSessio  function
 //-----------------------------
 /*
-*Look for existing uid given it is key
-*
+*Look for existing uid given it is key.
+*@Return {PROMISE Object} TRUE if found active Session and FALSE otherwise.
 */
 exports.findSession = function(key)
 {
 	//Initialize redis client
 	var client = redis.createClient(portNumberRedisServer, 	ipRedisServer);
+	var found = false;
 
 	//Probe connection
 	client.on('connect', function() {
@@ -261,12 +311,78 @@ exports.findSession = function(key)
 			console.log(err);
 			throw err;
 
-		}//Fin if	
+		}//Fin if 1	
 
 		console.log('RESULT: ' + result);
+
+		//Verify if exists an active session
+		if(result != null)
+		{
+			//An active session has been found
+			found = true;
+		}//Finf if 2	
+
+		console.log('Is there an active session? : ' + found);
+
+
 	});//Fin get
 
+	return Promise.all([found]);
+
 }//End createSessio  function
+//-----------------------------
+/*
+*Look for exisiting user in database of user
+*/
+exports.findUser = function(uname,password)
+{
+	const pg = generateClientDBUsrPer();
+	var uid = -1;
+
+	pg.connect(function(err,client){
+		if(err)
+		{
+			console.log(err);
+		}//Fin if
+		else
+		{
+			console.log('connected!!');
+
+			//Ejecutar archivo .sql como query
+			client.query("SELECT userID FROM users WHERE username LIKE '"+uname+"' AND password LIKE '"+password+"';", function(err,result){
+				//done();
+				if(err)
+				{
+					console.log("Error al buscar usuario: ", err);
+					//Finalizar con errror
+					process.exit(1);
+
+				}//FIn if
+
+				console.log('Result query:');
+				//console.log(result);
+
+				//Found a match
+				if(result.rowCount > 0)
+				{
+					uid = result.rows[0].userid;
+					console.log('User found with id:');
+					console.log(uid);
+
+				}//Fin if	
+
+				return uid;
+
+
+				//Finalizar exitosamente la conexion hasta de spues de haber ejecutado .sql
+				process.exit(0);
+
+			});//End client.query	
+
+		}//End else	
+	});//End conexion
+
+}//End findUser function
 //-----------------------------
 //Session example:
 //https://www.codementor.io/mayowa.a/how-to-build-a-simple-session-based-authentication-system-with-nodejs-from-scratch-6vn67mcy3

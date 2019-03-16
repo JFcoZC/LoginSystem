@@ -25,6 +25,13 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use( bodyParser.urlencoded({extended:true}) );
 
+/*Import module on file loginLibrary.js*/
+var session  = require('../servidor/loginLibrary.js');
+/*Adjust parameters of database of session table*/
+session.setDataSessionsDB('192.168.0.40', 6379);
+/*Adjust parameters of database of Tables ROL,USERS,PERMISSION*/
+session.setDataDBUsersAndPermissions('192.168.0.30',5432,'postgres','postgres','postgres');
+
 /*Make public de directories in the specified path an access to them using the slected prefix.
 *THIS LINE IS THE EQUIVALENT TO HAVE AN HTML SERVER LIKE APACHE
 *
@@ -49,36 +56,37 @@ app.get('/serverTime' , (req,res) => {
 /**End of HTTP get Handelr for serverTime */
 
 /**
-*Handler of an HTTP get request returning actual time on JSON
+*Handle an HTTP get request to root by redirecting to /login folder direction
 *@param {string} URL - root directory
 *@param {function} function that is executed as a result of the request - Arrow function (=>) with 2 arguments
 */
 app.get('/' , (req,res) => {
 
-	/**Test to send some data on JSON format*/
-	res.send({
-		name : 'Andrew',
-		location : 'Puebla'
-	});
+	res.redirect('/login');
 
 });
 /**End of HTTP get Handelr for root folder*/
 
 /**
-*Handler of an HTTP get request and redirect to the path that give us access to the public folder 
-*where the html, css and js files can be accessed
+*Handler of an HTTP get request to /login and redirect to the path that give us access to the public folder 
+*where the html, css and js files can be accessed (FIles SERVER defined with app.use() )
 *
-*@param {string} URL - 
+*@param {string} URL - login directory
 *@param {function} function that is executed as a result of the request - Arrow function (=>) with 2 arguments
 */
 app.get('/login', (req,res) => {
 	
-	/*app.use( express.static(path.join(__dirname,'../cliente/login.html')) );*/
 	res.redirect( '/cliente/login.html');
 });
-/**End of HTTP get Handelr for login */
+/**End of HTTP get Handler for login */
 
-/*Action to perform when in this URL a post is performed*/
+/*
+* Post to verify valid credentials form user that wants access
+* Post method executed when trying to login from login.html by submiting username and password.
+* 
+*@param {string} URL - cliente directory = HTML server
+*@param {function} function that is executed as a result of the request - Arrow function (=>) with 2 arguments
+*/
 app.post('/cliente', (req,res) => {
 	console.log("POST IN /cliente");
 	/*Get info of inputs using DOM model*/
@@ -89,7 +97,50 @@ app.post('/cliente', (req,res) => {
 	/*console.log(res);*/
 
 });
-/*End of post*/
+/*End of post*/	
+
+/*
+*Initial post to know if there is an active session. 
+*This post method is called from client side when loading the html document through method: verifySession().
+*
+*Function verifies if a session with the sessionId is found on the Table of the DB for SESSIONS.
+*If found redirects to home page without ask for credentials
+*If not found redirects to login page to ask for credentials
+*
+*@param {string} URL - verifySession path/directory
+*@param {function} function that is executed as a result of the request - Arrow function (=>) with 2 arguments
+*
+*@Retrurn {html file}
+*/
+app.post('/verifySession', (req,res) => {
+	
+	console.log("POST verifySession");
+	console.log(req.body);
+	var sessionKey = req.body.sessionId;
+	console.log(sessionKey);
+
+	//Verify if session exists for given sessionkey
+	//And send corrsponding html file as response
+	//var isActive = session.findSession(sessionKey);
+
+	//Access to the value of promise
+	session.findSession(sessionKey).then(function(result)
+	{
+		console.log("-> "+result)
+		if( result == true )
+		{
+			res.redirect( '/cliente/home.html');
+		}
+		else
+		{
+			res.redirect( '/cliente/login.html');
+
+		}//End else	
+
+	});//End promise
+
+});
+/*End initial POST*/
 
 app.listen(3000);
 console.log('server listening in port 3000');
