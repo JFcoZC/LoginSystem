@@ -32,6 +32,7 @@ session.setDataSessionsDB('192.168.0.40', 6379);
 /*Adjust parameters of database of Tables ROL,USERS,PERMISSION*/
 session.setDataDBUsersAndPermissions('192.168.0.30',5432,'postgres','postgres','postgres');
 
+
 /*Make public de directories in the specified path an access to them using the slected prefix.
 *THIS LINE IS THE EQUIVALENT TO HAVE AN HTML SERVER LIKE APACHE
 *
@@ -121,13 +122,14 @@ app.post('/verifySession', (req,res) => {
 
 	//Verify if session exists for given sessionkey
 	//And send corrsponding html file as response
-	//var isActive = session.findSession(sessionKey);
-
-	//Access to the value of promise
+	/*var isActive;
 	session.findSession(sessionKey).then(function(result)
 	{
-		console.log("-> "+result)
-		if( result == true )
+		//Access to the value of promise
+		console.log("-> "+result);
+		isActive = result;
+
+		if( isActive == true )
 		{
 			res.redirect( '/cliente/home.html');
 		}
@@ -137,7 +139,15 @@ app.post('/verifySession', (req,res) => {
 
 		}//End else	
 
-	});//End promise
+		return result;
+			
+	}).then(function(result)
+	{
+		console.log("Fin!");
+
+	});//End promise*/
+
+	session.handlerSession(sessionKey, res, '/cliente/home.html', '/cliente/login.html');
 
 });
 /*End initial POST*/

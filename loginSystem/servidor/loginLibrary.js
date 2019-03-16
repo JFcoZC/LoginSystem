@@ -13,6 +13,11 @@ var fs = require('fs');
 const {Client,Pool} = require('pg');
 //Moudle to connect with Redis
 var redis = require('Redis');
+//Module to make promises easier
+var bluebird = require('bluebird');
+//Make easier promises of Redis especifically
+bluebird.promisifyAll(redis.RedisClient.prototype);
+bluebird.promisifyAll(redis.Multi.prototype);
 //Module to generate Unique Universal Identifiers
 const uuidv1 = require('uuid/v1');
 
@@ -304,14 +309,7 @@ exports.findSession = function(key)
 		console.log("ERROR AT: "+err);
 	});//Fin funcion
 
-	client.get(key, function(err,result){
-
-		if(err)
-		{
-			console.log(err);
-			throw err;
-
-		}//Fin if 1	
+	client.getAsync(key).then(function(result){
 
 		console.log('RESULT: ' + result);
 
@@ -324,12 +322,66 @@ exports.findSession = function(key)
 
 		console.log('Is there an active session? : ' + found);
 
+		return Promise.all([found]);
 
-	});//Fin get
+	});//Fin getAsync provided by promisify bluebird
 
-	return Promise.all([found]);
+}//End createSessio function
+//-----------------------------
+/*
+*Based in the return value of findSession perform a function when
+*returns true and other when returning false
+*
+*@Return {PROMISE Object} TRUE if found active Session and FALSE otherwise.
+*/
+exports.handlerSession  = function(key,res,activeSessionPage,expiredSessionPage)
+{
+	//Initialize redis client
+	var client = redis.createClient(portNumberRedisServer, 	ipRedisServer);
+	var found = false;
 
-}//End createSessio  function
+	//Probe connection
+	client.on('connect', function() {
+		console.log('Redis client connnected succesfully!');
+	} );
+
+	//Print errors if any
+	client.on('error', function(err) {
+		console.log("ERROR AT: "+err);
+	});//Fin funcion
+
+	client.getAsync(key).then(function(result){
+
+		console.log('RESULT: ' + result);
+
+		//Verify if exists an active session
+		if(result != null)
+		{
+			//An active session has been found
+			found = true;
+		}//Finf if 2	
+
+		console.log('Is there an active session? : ' + found);
+
+		Promise.all([found]).then(function(values){
+
+			var isActive = values[0];
+			console.log('SessionActive?->'+isActive)
+			if(isActive)
+			{
+				res.redirect( activeSessionPage);
+			}//End if
+			else
+			{
+				res.redirect( expiredSessionPage);
+			}//End else	
+
+		});//Fin promise all
+
+
+	});//Fin getAsync provided by promisify bluebird
+
+}//End handler session function
 //-----------------------------
 /*
 *Look for exisiting user in database of user

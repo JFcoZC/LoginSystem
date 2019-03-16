@@ -24,6 +24,10 @@ En misma carpeta donde esta instalado node y express(loginSystem/Servidor)
 **Instalar node-reddis
 En misma carpeta donde esta instalado node y express(loginSystem/Servidor)
 1)npm install redis
+
+**Instalar bluebird (Promisess library)
+En misma carpeta donde esta instalado node y express(loginSystem/Servidor)
+1)npm install bluebird
 ---
 Guia github:
 http://rogerdudler.github.io/git-guide/index.es.html

@@ -33,8 +33,12 @@ function verifySession(sessionkey)
 		type: 'POST',
 		/*Send al the data in json format*/
 		data: {sessionId:sessionkey},
+		/*Format of the data that will be recieved*/
+		dataType :'html',
 		success: function(response){
-			console.log(response);
+			/*console.log(response);*/
+			/*Load HTML recived*/
+			$('html').html(response);
 		},
 		error: function(xhr,status,error){
 			console.log("Error verifying session!");
