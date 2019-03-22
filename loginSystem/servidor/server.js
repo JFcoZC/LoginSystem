@@ -100,6 +100,37 @@ app.post('/cliente', (req,res) => {
 });
 /*End of post*/	
 
+app.post('/register', (req,res) => {
+	
+	console.log("POST IN /register");
+	/*Get info of inputs using DOM model*/
+	var password = req.body.contra;
+	var user  = req.body.username;
+	console.log('Password POST: '+password);
+	console.log('USER POST: '+user);
+
+	//Get promise
+	var sessionId = session.doLogin(user,password,1);
+
+	console.log(sessionId);
+
+	//Acces to the value that is inside the promise
+	sessionId.then(function(result)
+	{
+
+		console.log('answer post with uuid: '+result);
+		//Answer to the client post with string
+		res.send(result);
+
+	});//End promise
+
+
+	
+	/*console.log(res);*/
+
+});
+/*End of post*/	
+
 /*
 *Initial post to know if there is an active session. 
 *This post method is called from client side when loading the html document through method: verifySession().

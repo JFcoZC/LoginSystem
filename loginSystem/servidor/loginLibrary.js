@@ -162,7 +162,7 @@ exports.insertUser = function(userName,pass,rolid)
 			console.log('Connected to insert a new USER');
 
 			//Ejecutar archivo .sql como query
-			client.query("INSERT INTO USERS (userId,password,username,rolId) VALUES (DEFAULT,'"+pass+"','"+userName+"','"+rolid+"'');", function(err,result){
+			client.query("INSERT INTO USERS (userId,password,username,rolId) VALUES (DEFAULT,'"+pass+"','"+userName+"',"+rolid+") RETURNING userId;", function(err,result){
 				if(err)
 				{
 					console.log("Error inserting new User", err);
@@ -172,10 +172,12 @@ exports.insertUser = function(userName,pass,rolid)
 				}//FIn if
 
 				console.log('New user succesfully created!');
-				console.log(result);	
+				console.log(result.rows[0].userid);
+				
+				return result.rows[0].userid;	
 
 				//Finalizar exitosamente la conexion hasta de spues de haber ejecutado .sql
-				process.exit(0);
+				//process.exit(0);
 
 			});//End client.query	
 
@@ -262,30 +264,43 @@ exports.setDataSessionsDB = function(ip, port)
 //-----------------------------
 /*
 *Insert a UID in table with the key generated using a uuid
+IMPLMENTAT EN ESTA FUNCION PROMISE!!
 *
 */
 exports.createSession = function(uid)
 {
-	//Initialize redis client
-	var client = redis.createClient(portNumberRedisServer, 	ipRedisServer);
+	return new Promise(function (resolve, reject)
+	{
+		//Initialize redis client
+		var client = redis.createClient(portNumberRedisServer, 	ipRedisServer);
 
-	//Probe connection
-	client.on('connect', function() {
-		console.log('Redis client connnected succesfully!');
-	} );
+		//Probe connection
+		client.on('connect', function() {
+			console.log('Redis client connnected succesfully!');
+		} );
 
-	//Print errors if any
-	client.on('error', function(err) {
-		console.log("ERROR AT: "+err);
-	});//Fin funcion
+		//Print errors if any
+		client.on('error', function(err) {
+			console.log("ERROR AT: "+err);
+		});//Fin funcion
 
-	//Create session key
-	var key =  1;//uuidv1();
-	var seconds = 60;
-	//Set session that expires after determined number of seconds
-	client.setex(key,seconds,uid, function(err,result){
-		console.log(result);
-	});
+		//Create session key with unique universal identifier
+		var key =  uuidv1();
+		var seconds = 60;
+		//Set session that expires after determined number of seconds
+		client.setex(key,seconds,uid, function(err,result)
+		{
+			console.log(result);
+
+		});//end setex
+
+		//Return unique universal identifier as resolve of the promise of createSession function
+		resolve(key);
+
+
+	});//End promise
+
+	
 
 }//End createSessio  function
 //-----------------------------
@@ -423,7 +438,7 @@ exports.findUser = function(uname,password)
 
 				}//Fin if	
 
-				return uid;
+				return Promise.all([uid]);;
 
 
 				//Finalizar exitosamente la conexion hasta de spues de haber ejecutado .sql
@@ -443,10 +458,129 @@ exports.findUser = function(uname,password)
 //https://medium.com/@mridu.sh92/a-quick-guide-for-authentication-using-bcrypt-on-express-nodejs-1d8791bb418f
 //https://www.npmjs.com/package/bcrypt-nodejs
 
-//Proceso para verificar sessiones:
-/*1)Verificar que ID de usuario exista en tabla USERS:
+//Process to register a session as the first Time and create a session returning the id that identifies this session:
+/*
 *
-* 
+*First login that if valid credentials it also creates a session and reutrns 
+*the key of that session as result.
 *
-*
+*@param {string} username
+*@param {string} pass
+*@param {int} rolid
+*@return {Promise that resolves/returns the session id that is an universal unique identifier} new Promise
 */
+exports.doLogin = function(userName,pass,rolid)
+{
+	const pg = generateClientDBUsrPer();
+
+	return new Promise(
+		function (resolve,reject) 
+		{
+
+			pg.connect(async function(err,client){
+				if(err)
+				{
+					console.log(err);
+				}//Fin if
+				else
+				{
+					console.log('Connected to insert a new USER');
+
+					//Ejecutar archivo .sql como query
+					client.query("INSERT INTO USERS (userId,password,username,rolId) VALUES (DEFAULT,'"+pass+"','"+userName+"',"+rolid+") RETURNING userId;", 
+						//This funvtion must be async because there is an await inside it!!
+						async function(err,result){
+							if(err)
+							{
+								console.log("Error inserting new User", err);
+								//Kill the server
+								process.exit(1);
+
+							}//FIn if
+
+							console.log('New user succesfully created with id: ');
+							var userid = result.rows[0].userid;
+							console.log(userid);
+
+							try
+							{
+								//OBTENER ESTE VALOR COMO VALOR REGREADO DE PROMISSE
+								var sessionIdentifier = await exports.createSession(userid);
+
+								
+
+								console.log("New Session established between the universal unique identifier: "+sessionIdentifier+"an the id: "+userid);
+								//console.log(sessionIdentifier);
+
+								//Return to the client the universal session identifier as resolve of the promise of doLogin function
+								resolve(sessionIdentifier);
+
+							}//End try
+							catch(errror)
+							{
+								console.log("Error in promise of createSession:"+errror)
+								//Stop the server
+								process.exit(1);
+
+							}//End catch
+
+					});//End client.query	
+
+				}//End else	
+			});//End conexion
+
+		});//Fin objeto Promise
+
+}//End function do login
+
+/*exports.doLogin = function(userName,pass,rolid)
+{
+	const pg = generateClientDBUsrPer();
+
+	pg.connect(function(err,client){
+		if(err)
+		{
+			console.log(err);
+		}//Fin if
+		else
+		{
+			console.log('Connected to insert a new USER');
+
+			//Ejecutar archivo .sql como query
+			client.query("INSERT INTO USERS (userId,password,username,rolId) VALUES (DEFAULT,'"+pass+"','"+userName+"',"+rolid+") RETURNING userId;", function(err,result){
+				if(err)
+				{
+					console.log("Error inserting new User", err);
+					//Finalizar con errror
+					process.exit(1);
+
+				}//FIn if
+
+				console.log('New user succesfully created with id: ');
+				var userid = result.rows[0].userid;
+				console.log(userid);
+
+				var sessionIdentifier = exports.createSession(userid);
+
+				console.log("New Session established between the universal unique identifier: "+sessionIdentifier+"an the id: "+userid);
+				//console.log(sessionIdentifier);
+
+				//Return to the client the universal session identifier
+				return sessionIdentifier;
+
+				//Finalizar exitosamente la conexion hasta de spues de haber ejecutado .sql
+				process.exit(0);	
+
+			});//End client.query	
+
+		}//End else	
+	});//End conexion
+
+	return new Promise(
+		function (resolve,reject) 
+		{
+			
+
+		});//Fin objeto Promise
+
+}//End function do login*/

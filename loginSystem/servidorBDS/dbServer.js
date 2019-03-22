@@ -16,7 +16,7 @@ dbServer.createDatabaseFile();
 dbServer.uploadDatabaseFile();
 /*Insert a ROL and a USER for that role*/
 //dbServer.insertRol('Manager');
-//dbServer.insertUser('pedro','hola',1);
+
 
 /*Fin User given id and password*/
 //dbServer.findUser(1,'hola');
@@ -31,5 +31,8 @@ dbServer.uploadDatabaseFile();
 dbServer.setDataSessionsDB('192.168.0.40', 6379);
 
 dbServer.createSession('u1');
-dbServer.findSession(1);
-dbServer.findSession(2);
+//dbServer.findSession(1);
+//dbServer.findSession(2);
+
+//dbServer.insertUser('pedro','hola',1);
+//dbServer.doLogin('prueba','prueba',1);
