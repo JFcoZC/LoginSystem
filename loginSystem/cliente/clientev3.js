@@ -25,6 +25,9 @@ $(document).ready()
 /*
 *Send the data as an HTTP post transaction with json format.
 *
+*Succes of the post will recive the destination page to which
+*the current user must be redirected.
+*
 *@Param {string} - sessionkey
 */
 function verifySession(sessionkey)
@@ -53,6 +56,15 @@ function verifySession(sessionkey)
 
 }//End function login
 //----------------------------------
+/*
+*This function is called every time a new user wants to be registered
+*by sending its username and password when the sbumit button is clicked.
+*
+*NOTE:The button that call this function must be a functon that does not
+*automatically refresh the page. (adding type'button' to button avoid this
+*problem in chrome browser)
+*
+*/
 function registerUser()
 {
 	console.log('REGISTER OF USER');
@@ -70,13 +82,15 @@ function registerUser()
 		dataType :'text',
 		success: function(response){
 			
+			console.log("Success in POST of client")
+			
 			/*1)Save uuid recieved from server*/
-			console.log("New session for client with id: "+response);
+			console.log("New session for THIS client with id: "+response);
 			numberSession = response;
 
-			//Verify if session is active and redirect to 
+			//2)Verify if session is active and redirect to 
 			//corresponding page
-			//verifySession(numberSession);
+			verifySession(numberSession);
 
 		},
 		error: function(xhr,status,error){

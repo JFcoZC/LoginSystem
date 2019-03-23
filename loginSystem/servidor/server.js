@@ -88,19 +88,20 @@ app.get('/login', (req,res) => {
 *@param {string} URL - cliente directory = HTML server
 *@param {function} function that is executed as a result of the request - Arrow function (=>) with 2 arguments
 */
-app.post('/cliente', (req,res) => {
+/*app.post('/cliente', (req,res) => {
 	console.log("POST IN /cliente");
-	/*Get info of inputs using DOM model*/
+	/*Get info of inputs using DOM model
 	var password = req.body.paswd;
 	var user  = req.body.user;
 	console.log('Password POST: '+password);
 	console.log('USER POST: '+user);
-	/*console.log(res);*/
+	/*console.log(res);
 
-});
+});*/
 /*End of post*/	
 
-app.post('/register', (req,res) => {
+app.post('/register', async function(req,res)
+{
 	
 	console.log("POST IN /register");
 	/*Get info of inputs using DOM model*/
@@ -109,24 +110,38 @@ app.post('/register', (req,res) => {
 	console.log('Password POST: '+password);
 	console.log('USER POST: '+user);
 
-	//Get promise
-	var sessionId = session.doLogin(user,password,1);
+	/*try
+	{
+		//Get promise
+		var sessionId = await session.doLogin(user,password,1);
 
-	console.log(sessionId);
+		console.log(sessionId);
 
-	//Acces to the value that is inside the promise
-	sessionId.then(function(result)
+		console.log('answer post with uuid: '+sessionId);
+		//Answer to the client post with string
+		res.json({uuid:sessionId});
+		console.log("DONE HERE");
+
+	}//End try
+	catch(error)
+	{
+		console.log(error);
+
+	}//End catch*/
+
+	/*var sessionId = await session.doLogin(user,password,1).then(res.send(sessionId) );*/
+	
+	session.doLogin(user,password,1).then(function(result)
 	{
 
-		console.log('answer post with uuid: '+result);
+		const sessionId = result;
+
+		console.log(sessionId);
+
+		console.log('Answer post with uuid: '+sessionId);
 		//Answer to the client post with string
-		res.send(result);
-
-	});//End promise
-
-
-	
-	/*console.log(res);*/
+		res.status(200).send(sessionId);
+	}).catch(function(err) {console.log(err);});
 
 });
 /*End of post*/	

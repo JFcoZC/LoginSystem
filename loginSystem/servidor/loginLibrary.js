@@ -276,7 +276,7 @@ exports.createSession = function(uid)
 
 		//Probe connection
 		client.on('connect', function() {
-			console.log('Redis client connnected succesfully!');
+			console.log('Redis client connnected succesfully to create a new session!');
 		} );
 
 		//Print errors if any
@@ -290,12 +290,12 @@ exports.createSession = function(uid)
 		//Set session that expires after determined number of seconds
 		client.setex(key,seconds,uid, function(err,result)
 		{
-			console.log(result);
+			console.log("Result inserting new session:"+result);
+
+			//Return unique universal identifier as resolve of the promise of createSession function
+			resolve(key);
 
 		});//end setex
-
-		//Return unique universal identifier as resolve of the promise of createSession function
-		resolve(key);
 
 
 	});//End promise
@@ -506,10 +506,7 @@ exports.doLogin = function(userName,pass,rolid)
 							{
 								//OBTENER ESTE VALOR COMO VALOR REGREADO DE PROMISSE
 								var sessionIdentifier = await exports.createSession(userid);
-
-								
-
-								console.log("New Session established between the universal unique identifier: "+sessionIdentifier+"an the id: "+userid);
+								console.log("New Session established between the universal unique identifier: "+sessionIdentifier+" and the id: "+userid);
 								//console.log(sessionIdentifier);
 
 								//Return to the client the universal session identifier as resolve of the promise of doLogin function
@@ -519,8 +516,10 @@ exports.doLogin = function(userName,pass,rolid)
 							catch(errror)
 							{
 								console.log("Error in promise of createSession:"+errror)
+								reject(err);
 								//Stop the server
 								process.exit(1);
+
 
 							}//End catch
 
