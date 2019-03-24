@@ -77,29 +77,18 @@ app.get('/' , (req,res) => {
 */
 app.get('/login', (req,res) => {
 	
-	res.redirect( '/cliente/login.html');
+	res.redirect('/cliente/login.html');
+	//session.handlerSession(sessionKey, res, '/cliente/home.html', '/cliente/login.html');
 });
-/**End of HTTP get Handler for login */
+//End of HTTP get Handler for login
 
 /*
-* Post to verify valid credentials form user that wants access
-* Post method executed when trying to login from login.html by submiting username and password.
+* Post to create a new user in databse at the same time it creates a session for the user that is created
+* Post method executed when submitin password and username from createAccount.html file with serverV3.js
 * 
 *@param {string} URL - cliente directory = HTML server
 *@param {function} function that is executed as a result of the request - Arrow function (=>) with 2 arguments
-*/
-/*app.post('/cliente', (req,res) => {
-	console.log("POST IN /cliente");
-	/*Get info of inputs using DOM model
-	var password = req.body.paswd;
-	var user  = req.body.user;
-	console.log('Password POST: '+password);
-	console.log('USER POST: '+user);
-	/*console.log(res);
-
-});*/
-/*End of post*/	
-
+*/	
 app.post('/register', async function(req,res)
 {
 	
@@ -110,28 +99,19 @@ app.post('/register', async function(req,res)
 	console.log('Password POST: '+password);
 	console.log('USER POST: '+user);
 
-	/*try
-	{
-		//Get promise
-		var sessionId = await session.doLogin(user,password,1);
+	//Get promise value
+	var sessionId = await session.doRegister(user,password,1);
 
-		console.log(sessionId);
+	console.log('answer post with uuid: '+sessionId);
+	//Answer to the client post with string
+	res.send(sessionId);
 
-		console.log('answer post with uuid: '+sessionId);
-		//Answer to the client post with string
-		res.json({uuid:sessionId});
-		console.log("DONE HERE");
+	console.log("--- DONE POST /register --");
 
-	}//End try
-	catch(error)
-	{
-		console.log(error);
 
-	}//End catch*/
-
-	/*var sessionId = await session.doLogin(user,password,1).then(res.send(sessionId) );*/
+	/*Second way of obtain the promise response and answer the POST of the client*/
 	
-	session.doLogin(user,password,1).then(function(result)
+	/*session.doLogin(user,password,1).then(function(result)
 	{
 
 		const sessionId = result;
@@ -141,18 +121,52 @@ app.post('/register', async function(req,res)
 		console.log('Answer post with uuid: '+sessionId);
 		//Answer to the client post with string
 		res.status(200).send(sessionId);
-	}).catch(function(err) {console.log(err);});
+	}).catch(function(err) {console.log(err);});*/
 
 });
 /*End of post*/	
 
 /*
+* Post to verify valid credentials form user that wants access, and if found a user in db with that
+* password and username generate a session.
+*
+* Post method executed when trying to login from login.html by submiting username and password.
+* 
+*@param {string} URL - cliente directory = HTML server
+*@param {function} function that is executed as a result of the request - Arrow function (=>) with 2 arguments
+*/
+
+app.post('/login', async function(req,res)
+{
+	
+	console.log("POST IN /login");
+	/*Get info of inputs using DOM model*/
+	var password = req.body.contra;
+	var user  = req.body.username;
+	console.log('Password POST: '+password);
+	console.log('USER POST: '+user);
+
+	//Get promise value
+	var sessionId = await session.doLogin(user,password);
+
+	console.log('answer login with uuid: '+sessionId);
+	
+	//Answer to the client by redirecting to 
+	res.send(sessionId);
+
+	console.log("--- DONE POST /login --");
+
+});
+/*End of post*/
+
+/*
 *Initial post to know if there is an active session. 
 *This post method is called from client side when loading the html document through method: verifySession().
+*This method is only called from the file serverv3.js in createAccount.html
 *
 *Function verifies if a session with the sessionId is found on the Table of the DB for SESSIONS.
 *If found redirects to home page without ask for credentials
-*If not found redirects to login page to ask for credentials
+*If not found redirects to createAccount page to ask for credentials
 *
 *@param {string} URL - verifySession path/directory
 *@param {function} function that is executed as a result of the request - Arrow function (=>) with 2 arguments
@@ -161,7 +175,7 @@ app.post('/register', async function(req,res)
 */
 app.post('/verifySession', (req,res) => {
 	
-	console.log("POST verifySession");
+	console.log("POST verifySession for creating account");
 	console.log(req.body);
 	var sessionKey = req.body.sessionId;
 	console.log(sessionKey);
@@ -193,10 +207,24 @@ app.post('/verifySession', (req,res) => {
 
 	});//End promise*/
 
+	session.handlerSession(sessionKey, res, '/cliente/home.html', '/cliente/createAccount.html');	
+
+});
+/*End verifySession for Register POST*/
+
+/*
+*This method is only called from the file clienteLogin.js in login.html
+*/
+app.post('/verifySessionLogin', (req,res) =>{
+	console.log("POST verifySession for login");
+	console.log(req.body);
+	var sessionKey = req.body.sessionId;
+	console.log(sessionKey);
+
 	session.handlerSession(sessionKey, res, '/cliente/home.html', '/cliente/login.html');
 
 });
-/*End initial POST*/
+//End verify session for login
 
 app.listen(3000);
 console.log('server listening in port 3000');

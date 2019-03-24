@@ -3,7 +3,11 @@ C:
 cd C:\Memoria\Semestre 8\Admin redes-serv\Practica2 login system\loginSystem\servidor
 node server.js
 
-**Crear tablas dado una BDS y un Usuario existente en Postgres
+**Crear tablas dado una BDS y un Usuario existente en Postgres:
+//(Este archivo no debe ejecutarse siempre, solament si se desea resetear la bds de postgres)
+//Nota: La primera vez que se corra en un servidor nuevo de Postgres va a marcar error por los
+//deletes del inicio del .sql, ya que la BDs va a estar vacia
+
 cd  C:\Users\Fzjimenez\Documents\Memoria\Semestre 8\Admin redes-serv\Practica 2 login system\loginSystem\servidorBDS
 node dbServer.js
 

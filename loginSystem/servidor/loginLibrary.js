@@ -406,48 +406,49 @@ exports.findUser = function(uname,password)
 	const pg = generateClientDBUsrPer();
 	var uid = -1;
 
-	pg.connect(function(err,client){
-		if(err)
+	return new Promise(
+		function(resolve,reject)
 		{
-			console.log(err);
-		}//Fin if
-		else
-		{
-			console.log('connected!!');
-
-			//Ejecutar archivo .sql como query
-			client.query("SELECT userID FROM users WHERE username LIKE '"+uname+"' AND password LIKE '"+password+"';", function(err,result){
-				//done();
+			pg.connect(function(err,client){
 				if(err)
 				{
-					console.log("Error al buscar usuario: ", err);
-					//Finalizar con errror
-					process.exit(1);
-
-				}//FIn if
-
-				console.log('Result query:');
-				//console.log(result);
-
-				//Found a match
-				if(result.rowCount > 0)
+					console.log(err);
+				}//Fin if
+				else
 				{
-					uid = result.rows[0].userid;
-					console.log('User found with id:');
-					console.log(uid);
+					console.log('connected to find existing user in database!');
 
-				}//Fin if	
+					//Ejecutar archivo .sql como query
+					client.query("SELECT userID FROM users WHERE username LIKE '"+uname+"' AND password LIKE '"+password+"';", function(err,result){
+						//done();
+						if(err)
+						{
+							console.log("Error al buscar usuario: ", err);
+							//Finalizar con errror
+							process.exit(1);
 
-				return Promise.all([uid]);;
+						}//FIn if
 
+						console.log('Result query:');
+						//console.log(result);
 
-				//Finalizar exitosamente la conexion hasta de spues de haber ejecutado .sql
-				process.exit(0);
+						//Found a match
+						if(result.rowCount > 0)
+						{
+							uid = result.rows[0].userid;
+							console.log('User found with id:');
+							console.log(uid);
 
-			});//End client.query	
+						}//Fin if	
 
-		}//End else	
-	});//End conexion
+						resolve(uid);
+
+					});//End client.query	
+
+				}//End else	
+			});//End conexion
+
+		});//End  new promise
 
 }//End findUser function
 //-----------------------------
@@ -469,7 +470,7 @@ exports.findUser = function(uname,password)
 *@param {int} rolid
 *@return {Promise that resolves/returns the session id that is an universal unique identifier} new Promise
 */
-exports.doLogin = function(userName,pass,rolid)
+exports.doRegister = function(userName,pass,rolid)
 {
 	const pg = generateClientDBUsrPer();
 
@@ -507,7 +508,6 @@ exports.doLogin = function(userName,pass,rolid)
 								//OBTENER ESTE VALOR COMO VALOR REGREADO DE PROMISSE
 								var sessionIdentifier = await exports.createSession(userid);
 								console.log("New Session established between the universal unique identifier: "+sessionIdentifier+" and the id: "+userid);
-								//console.log(sessionIdentifier);
 
 								//Return to the client the universal session identifier as resolve of the promise of doLogin function
 								resolve(sessionIdentifier);
@@ -530,56 +530,39 @@ exports.doLogin = function(userName,pass,rolid)
 
 		});//Fin objeto Promise
 
-}//End function do login
+}//End function do Register
 
-/*exports.doLogin = function(userName,pass,rolid)
+/*
+*
+*
+*/
+exports.doLogin = function(userName,pass)
 {
 	const pg = generateClientDBUsrPer();
 
-	pg.connect(function(err,client){
-		if(err)
-		{
-			console.log(err);
-		}//Fin if
-		else
-		{
-			console.log('Connected to insert a new USER');
-
-			//Ejecutar archivo .sql como query
-			client.query("INSERT INTO USERS (userId,password,username,rolId) VALUES (DEFAULT,'"+pass+"','"+userName+"',"+rolid+") RETURNING userId;", function(err,result){
-				if(err)
-				{
-					console.log("Error inserting new User", err);
-					//Finalizar con errror
-					process.exit(1);
-
-				}//FIn if
-
-				console.log('New user succesfully created with id: ');
-				var userid = result.rows[0].userid;
-				console.log(userid);
-
-				var sessionIdentifier = exports.createSession(userid);
-
-				console.log("New Session established between the universal unique identifier: "+sessionIdentifier+"an the id: "+userid);
-				//console.log(sessionIdentifier);
-
-				//Return to the client the universal session identifier
-				return sessionIdentifier;
-
-				//Finalizar exitosamente la conexion hasta de spues de haber ejecutado .sql
-				process.exit(0);	
-
-			});//End client.query	
-
-		}//End else	
-	});//End conexion
-
 	return new Promise(
-		function (resolve,reject) 
+		async function (resolve,reject) 
 		{
-			
+
+			var userID = await exports.findUser(userName,pass);
+			console.log('User found with id:'+userID);
+
+			if(userID == undefined)
+			{
+				resolve('userNotFound');
+
+			}//End if
+			else
+			{
+				//OBTENER ESTE VALOR COMO VALOR REGREADO DE PROMISSE
+				var sessionIdentifier = await exports.createSession(userID);
+				console.log("New Session established between the universal unique identifier: "+sessionIdentifier+" and the id: "+userID);
+
+				//Return to the client the universal session identifier as resolve of the promise of doLogin function
+				resolve(sessionIdentifier);
+
+			}//End else
 
 		});//Fin objeto Promise
 
-}//End function do login*/
+}//End function doLogin

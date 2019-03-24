@@ -18,7 +18,7 @@ $(document).ready()
 
 
 	//************
-	verifySession(numberSession);
+	verifySessionLogin(numberSession);
 	//************
 
 }//Fin funcion ready
@@ -31,12 +31,12 @@ $(document).ready()
 *
 *@Param {string} - sessionkey
 */
-function verifySession(sessionkey)
+function verifySessionLogin(sessionkey)
 {
 	console.log('START OF LOGIN');
 	
 	$.ajax({
-		url:'http://127.0.0.1:3000/verifySession',
+		url:'http://127.0.0.1:3000/verifySessionLogin',
 		type: 'POST',
 		/*Send al the data in json format*/
 		data: {sessionId:sessionkey},
@@ -66,15 +66,15 @@ function verifySession(sessionkey)
 *problem in chrome browser)
 *
 */
-function registerUser()
+function login()
 {
-	console.log('REGISTER OF USER');
+	console.log('LOGIN OF USER');
 
 	var pass = document.getElementsByName('paswd')[0].value;
 	var uname = document.getElementsByName('user')[0].value;
 	
 	$.ajax({
-		url:'http://127.0.0.1:3000/register',
+		url:'http://127.0.0.1:3000/login',
 		type: 'POST',
 		/*Send al the data in json format*/
 		data: {contra:pass,
@@ -83,10 +83,10 @@ function registerUser()
 		dataType :'text',
 		success: function(response){
 			
-			console.log("Success in POST of client")
+			console.log("Success in POST of client for login")
 
 			/*1)Save uuid recieved from server*/
-			console.log("New session for THIS client with id: "+response);
+			console.log("New session for THIS existent client with id: "+response);
 			numberSession = response;
 
 			//Save it locally in browser
@@ -94,7 +94,7 @@ function registerUser()
 
 			//2)Verify if session is active and redirect to 
 			//corresponding page
-			verifySession(numberSession);
+			verifySessionLogin(numberSession);
 
 		},
 		error: function(xhr,status,error){
