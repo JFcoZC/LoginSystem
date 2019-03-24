@@ -4,7 +4,7 @@
 *
 *Client file.
 *
-*File that contents functions that are call by the client when it loads the html file.
+*File that contents functions that are call by the client when it loads the createAccount.html file.
 */
 
 
@@ -13,6 +13,7 @@ $(document).ready()
 {
 	/**
 	*Represents de universal unique identifier of active session (if it exists one)
+	*and save the key in cache memory
 	*/
 	var numberSession = localStorage.sessionkey;
 
@@ -89,7 +90,7 @@ function registerUser()
 			console.log("New session for THIS client with id: "+response);
 			numberSession = response;
 
-			//Save it locally in browser
+			//Save it locally in cache memory
 			localStorage.sessionkey = numberSession;
 
 			//2)Verify if session is active and redirect to 

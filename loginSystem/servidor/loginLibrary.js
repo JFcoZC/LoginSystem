@@ -216,42 +216,6 @@ function generateClientDBUsrPer()
 }
 //--------------------------------
 /*
-*Funcion que dado el id del usuario se verifique si tiene los permisos para hacer una accion
-*P/E: userId = 1, permisson = 'user/login', type='get'
-*/
-function verifyPermission(uid, permisson, type)
-{
-
-}//End funcion verifyPermission
-//------------------------------
-/*
-*Funcion que inicie una session con base de datos que administra sesiones
-*Regesa: La sessionkey que se genera automaticamente
-*/
-function intializeSession(uid)
-{
-
-}//End function initializeSession
-//-----------------------------
-/*
-*Verifies if a session and userId pair exists in the table.
-*Returns: If a session with that key and uid was found or not in the table
-*/
-function verifySession(uid, sessionKey)
-{
-
-}//End verifySession function
-//-----------------------------
-/*
-*End a session, if found, in the table with session and userId paris.
-*Returns: Sucess or failure(if not found) the session that we wanted to end
-*/
-function endSession(uid, sessionKey)
-{
-
-}//End endSession function
-//-----------------------------
-/*
 *Set the values (ip and port number) where the server with the Redis DB
 *that handles the pairs of UserId,SessionNumber.
 */
@@ -459,11 +423,12 @@ exports.findUser = function(uname,password)
 //https://medium.com/@mridu.sh92/a-quick-guide-for-authentication-using-bcrypt-on-express-nodejs-1d8791bb418f
 //https://www.npmjs.com/package/bcrypt-nodejs
 
-//Process to register a session as the first Time and create a session returning the id that identifies this session:
 /*
 *
-*First login that if valid credentials it also creates a session and reutrns 
-*the key of that session as result.
+*Process to register a session as the first Time and create a session returning the id that identifies this session:
+*
+*This function can be fixed in order that the insertion of a new user will be performed with a callback in order to 
+*reduce the size of the function
 *
 *@param {string} username
 *@param {string} pass
@@ -534,7 +499,13 @@ exports.doRegister = function(userName,pass,rolid)
 
 /*
 *
+*First login that if valid credentials it also creates a session and reutrns 
+*the key of that session as result to avoid future login process until session expires
 *
+*
+*@param {string} username
+*@param {string} pass
+*@return {Promise that resolves/returns the session id that is an universal unique identifier} new Promise
 */
 exports.doLogin = function(userName,pass)
 {
@@ -547,7 +518,7 @@ exports.doLogin = function(userName,pass)
 			var userID = await exports.findUser(userName,pass);
 			console.log('User found with id:'+userID);
 
-			if(userID == undefined)
+			if(userID == -1)
 			{
 				resolve('userNotFound');
 

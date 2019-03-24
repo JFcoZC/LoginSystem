@@ -4,8 +4,7 @@
 *
 *Server file.
 *
-*File that contents functions that supply the clock information requested by clients using the
-*help of the Express framework.
+*File that contents functions that supply API functions requested by the client to login and register to the page.
 */
 
 /**Load module from express folder/library*/
@@ -32,7 +31,7 @@ session.setDataSessionsDB('192.168.0.40', 6379);
 /*Adjust parameters of database of Tables ROL,USERS,PERMISSION*/
 session.setDataDBUsersAndPermissions('192.168.0.30',5432,'postgres','postgres','postgres');
 
-
+//++++++++++++++++++++++++++++++++++++++++
 /*Make public de directories in the specified path an access to them using the slected prefix.
 *THIS LINE IS THE EQUIVALENT TO HAVE AN HTML SERVER LIKE APACHE
 *
@@ -40,6 +39,7 @@ session.setDataDBUsersAndPermissions('192.168.0.30',5432,'postgres','postgres','
 *@Param {path} - path to the directory that we are given public access
 */
 app.use('/cliente',express.static( path.join(__dirname, '../cliente') ) );
+//++++++++++++++++++++++++++++++++++++++++
 
 /**
 *Handler of an HTTP get request returning actual time on JSON
@@ -55,7 +55,7 @@ app.get('/serverTime' , (req,res) => {
 
 });
 /**End of HTTP get Handelr for serverTime */
-
+//-------------------------------------------
 /**
 *Handle an HTTP get request to root by redirecting to /login folder direction
 *@param {string} URL - root directory
@@ -67,7 +67,7 @@ app.get('/' , (req,res) => {
 
 });
 /**End of HTTP get Handelr for root folder*/
-
+//-------------------------------------------
 /**
 *Handler of an HTTP get request to /login and redirect to the path that give us access to the public folder 
 *where the html, css and js files can be accessed (FIles SERVER defined with app.use() )
@@ -81,7 +81,7 @@ app.get('/login', (req,res) => {
 	//session.handlerSession(sessionKey, res, '/cliente/home.html', '/cliente/login.html');
 });
 //End of HTTP get Handler for login
-
+//-------------------------------------------
 /*
 * Post to create a new user in databse at the same time it creates a session for the user that is created
 * Post method executed when submitin password and username from createAccount.html file with serverV3.js
@@ -125,7 +125,7 @@ app.post('/register', async function(req,res)
 
 });
 /*End of post*/	
-
+//-------------------------------------------
 /*
 * Post to verify valid credentials form user that wants access, and if found a user in db with that
 * password and username generate a session.
@@ -158,7 +158,7 @@ app.post('/login', async function(req,res)
 
 });
 /*End of post*/
-
+//-------------------------------------------
 /*
 *Initial post to know if there is an active session. 
 *This post method is called from client side when loading the html document through method: verifySession().
@@ -211,7 +211,7 @@ app.post('/verifySession', (req,res) => {
 
 });
 /*End verifySession for Register POST*/
-
+//-------------------------------------------
 /*
 *This method is only called from the file clienteLogin.js in login.html
 */
@@ -225,6 +225,7 @@ app.post('/verifySessionLogin', (req,res) =>{
 
 });
 //End verify session for login
+//-------------------------------------------
 
 app.listen(3000);
 console.log('server listening in port 3000');

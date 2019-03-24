@@ -1,3 +1,10 @@
+/*
+*This file is only used to create the DBServer tables automatically when it is executed.
+*
+*This functions are in a separated file in order to do not delte the databse every time
+*the server is up.
+*/
+
 /*Import module on file loginLibrary.js*/
 var dbServer = require('../servidor/loginLibrary.js');
 
@@ -14,25 +21,15 @@ dbServer.setDataDBUsersAndPermissions('192.168.0.30',5432,'postgres','postgres',
 dbServer.createDatabaseFile();
 /*Execute SQL File in specified DB*/
 dbServer.uploadDatabaseFile();
-/*Insert a ROL and a USER for that role*/
-//dbServer.insertRol('Manager');
 
-
-/*Fin User given id and password*/
-//dbServer.findUser(1,'hola');
-//dbServer.findUser('root','root');
-//dbServer.findUser('paco','pass');
-
+//-------- FUNCTION ONLY FOR TESTING PURPOSES --------------
 /*Specify the values of the DB in which the sessions will be stored
 *
 *@param: IP
 *@param: socket
 */
-dbServer.setDataSessionsDB('192.168.0.40', 6379);
+//dbServer.setDataSessionsDB('192.168.0.40', 6379);
 
-dbServer.createSession('u1');
+//dbServer.createSession('u1');
 //dbServer.findSession(1);
 //dbServer.findSession(2);
-
-//dbServer.insertUser('pedro','hola',1);
-//dbServer.doLogin('prueba','prueba',1);
